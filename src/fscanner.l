@@ -93,6 +93,7 @@ static	int	templateparens;		/* function template outer parentheses count */
 static	int	typedefbraces = -1;	/* initial typedef brace count */
 static	int	token;			/* token found */
 static	int 	ident_start;		/* begin of preceding identifier */
+static	int	classlevel;		/* nested class level */
 
 static	void	my_yymore(void);
 
@@ -335,6 +336,9 @@ wsnl		[ \t\r\v\f\n]|{comment}
 		endstate:
 				braces = 0;
 				classdef = NO;
+				if (classlevel > 0) {
+					classlevel--;
+				}
 			}
 			if (braces == 0 || (braces == 1 && classdef == YES)) {
 
@@ -455,6 +459,7 @@ wsnl		[ \t\r\v\f\n]|{comment}
 
 class{wsnl}+{identifier}({wsnl}|{identifier}|[():])*\{	{	/* class definition */
 			classdef = YES;
+			classlevel++;
 			tagdef =  'c';
 			yyless(5);		/* eat up 'class', and re-scan */
 			yy_set_bol(0);
@@ -518,7 +523,8 @@ if{wsnl}*\(	{ 	/* ignore 'if' */
 			 * I suspect. --- I think my new special-case rule for 'if'
 			 * could be helpful in removing that limitation */
 			if ((braces == 0 && ppdefine == NO && my_yytext[0] != '#' && rules == NO) ||
-			    (braces == 1 && classdef == YES)) {
+			    (braces == 1 && classdef == YES) ||
+			    (classlevel > 0)) {
 				fcndef = YES;
 				token = FCNDEF;
 				goto fcn;
@@ -829,6 +835,7 @@ initscanner(char *srcfile)
 	bplisting = NO;		/* breakpoint listing */
 	braces = 0;		/* unmatched left brace count */
 	classdef = NO;		/* c++ class definition */
+	classlevel = 0;		/* nested class level */
 	elseelif = NO;		/* #else or #elif found */
 	esudef = NO;		/* enum/struct/union global definition */
 	external = NO;		/* external definition */
