@@ -1,4 +1,6 @@
-# Install
+# Installation
+
+Instructions on how to build and install cscope used for [buttercup](https://github.com/trailofbits/buttercup).
 
 ## Download
 
